@@ -78,10 +78,10 @@ def print_project_duration(project_name, events):
             projects[title] += duration(event)
             
     for project, dur in projects.items():
-        print(project, dur.total_seconds() / (60 * 60), 'hours')
+        print(f'[{project}]', dur.total_seconds() / (60 * 60), 'hours')
 
 def print_ot(events):
-    print('OT')
+    print('FLETCHER OT')
     now = datetime.datetime.now()
     total_ot = datetime.timedelta(0)
     for event in events:
@@ -99,10 +99,11 @@ def print_ot(events):
         end = dateparser.parse(str(event['end'].get('dateTime')))
         title = event.get('summary')
         print(
-            start.strftime("%Y-%m-%d"),
-            title,
-            start.strftime("%H:%M"),
-            end.strftime("%H:%M")
+            start.strftime("%a %m-%d"),
+            f'[{title}]',
+            start.strftime("%-I:%M %p"),
+            '-',
+            end.strftime("%-I:%M %p")
             )
 
     print(f'Total: {sec_to_hour(total_ot.total_seconds())}')
