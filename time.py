@@ -101,9 +101,9 @@ def print_ot(events):
         print(
             start.strftime("%a %m-%d"),
             f'[{title}]',
-            start.strftime("%-I:%M %p"),
+            start.strftime("%I:%M %p"),
             '-',
-            end.strftime("%-I:%M %p")
+            end.strftime("%I:%M %p")
             )
 
     print(f'Total: {sec_to_hour(total_ot.total_seconds())}')
