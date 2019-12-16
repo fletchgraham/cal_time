@@ -39,22 +39,39 @@ def main():
     service = build('calendar', 'v3', credentials=creds)
 
     # Call the Calendar API
+    print('Talking to Google Calendar...')
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print(now)
     '''events_result = service.events().list(calendarId='primary', timeMin=now,
                                         maxResults=10, singleEvents=True,
                                         orderBy='startTime').execute()'''
     
     events_result = service.events().list(calendarId='primary', singleEvents=True,
-                                        orderBy='startTime').execute()
+                                        orderBy='startTime', timeMax=now).execute()
     events = events_result.get('items', [])
 
     if not events:
         print('No events.')
 
+    try:
+        arg = sys.argv[1]
+    except:
+        arg = 0
+
+    if arg == 'ot':
+        print_ot(events)
+        return
+
+    else:
+        print_project_duration(arg, events)
+        return
+
+def print_project_duration(project_name, events):
     projects = {}
     for event in events:
         title = str(event['summary'])
+        if project_name and not project_name == title:
+            continue
+
         if not title in projects.keys():
             projects[title] = duration(event)
         else:
@@ -63,12 +80,42 @@ def main():
     for project, dur in projects.items():
         print(project, dur.total_seconds() / (60 * 60), 'hours')
 
+def print_ot(events):
+    print('OT')
+    now = datetime.datetime.now()
+    total_ot = datetime.timedelta(0)
+    for event in events:
+        color_id = event.get('colorId')
+        if not color_id == '1':
+            continue
+
+        start = dateparser.parse(str(event['start'].get('dateTime')))
+        start_naive = start.replace(tzinfo = None)
+        if (now - start_naive).days > 7:
+            continue
+
+        total_ot += duration(event)
+        
+        end = dateparser.parse(str(event['end'].get('dateTime')))
+        title = event.get('summary')
+        print(
+            start.strftime("%Y-%m-%d"),
+            title,
+            start.strftime("%H:%M"),
+            end.strftime("%H:%M")
+            )
+
+    print(f'Total: {sec_to_hour(total_ot.total_seconds())}')
+
 def duration(event):
     start = dateparser.parse(str(event['start'].get('dateTime')))
     end = dateparser.parse(str(event['end'].get('dateTime')))
     if not start or not end:
         return datetime.timedelta(0)
     return end - start
+
+def sec_to_hour(sec):
+    return sec / (60 * 60)
     
 
 if __name__ == '__main__':
