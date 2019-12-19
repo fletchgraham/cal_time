@@ -7,6 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 import sys
+import csv
 
 import dateparser
 
@@ -94,19 +95,30 @@ def print_ot(events):
         if (now - start_naive).days > 7:
             continue
 
-        total_ot += duration(event)
+        dur = duration(event)
+        total_ot += dur
         
         end = dateparser.parse(str(event['end'].get('dateTime')))
         title = event.get('summary')
+        job_number = get_job_number(title)
         print(
             start.strftime("%a %m-%d"),
-            f'[{title}]',
-            start.strftime("%I:%M %p"),
-            '-',
-            end.strftime("%I:%M %p")
+            f'[{title} {job_number}]',
+            dur
             )
 
     print(f'Total: {sec_to_hour(total_ot.total_seconds())}')
+
+def get_job_number(project_title):
+    job_number = '000000'
+    with open('job_numbers.csv', 'r') as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            if project_title == row[0]:
+                job_number = row[1]
+
+    return job_number
+                
 
 def duration(event):
     start = dateparser.parse(str(event['start'].get('dateTime')))
